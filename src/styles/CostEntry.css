@@ -1,0 +1,115 @@
+.cost-entry {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .cost-entry h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+    font-weight: 500;
+  }
+  
+  .cost-entry input,
+  .cost-entry select,
+  .cost-entry textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+  }
+  
+  .cost-entry input:focus,
+  .cost-entry select:focus,
+  .cost-entry textarea:focus {
+    border-color: #4CAF50;
+    outline: none;
+  }
+  
+  .cost-entry textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .cost-entry button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    transition: background 0.3s;
+  }
+  
+  .cost-entry button:hover {
+    background: #45a049;
+  }
+  
+  .message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+  }
+  
+  .message.success {
+    background: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+  }
+  
+  .message.error {
+    background: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+  }
+  
+  .cost-history {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+  }
+  
+  .cost-history h3 {
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .history-list {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .history-item {
+    background: #f9f9f9;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #eee;
+  }
+  
+  .history-item p {
+    margin: 0.5rem 0;
+    color: #555;
+  }
+  
+  .history-item strong {
+    color: #333;
+  }
