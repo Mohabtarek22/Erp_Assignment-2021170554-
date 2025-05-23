@@ -10,25 +10,27 @@
 }
 
 .invoice-reminder h2 {
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-lg);
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 600;
+    color: transparent;
+    background: linear-gradient(135deg, #1a365d 0%, #3182ce 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    letter-spacing: -0.025em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: relative;
-    padding-bottom: var(--spacing-sm);
 }
 
 .invoice-reminder h2::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: -0.5rem;
+    left: 0;
     width: 60px;
-    height: 3px;
-    background: var(--primary-color);
-    border-radius: var(--radius-sm);
+    height: 4px;
+    background: linear-gradient(90deg, #3182ce 0%, #1a365d 100%);
+    border-radius: 2px;
 }
 
 .invoice-reminder form {
