@@ -5,70 +5,127 @@ const InvoiceReminder = () => {
   const [reminder, setReminder] = useState({
     invoiceId: '',
     dueDate: '',
+    clientName: '',
     clientEmail: '',
     clientPhone: '',
-    notificationType: 'email',
+    notificationType: ['email'], // Array to allow multiple notification types
     message: '',
+    priority: 'medium'
   });
+  const [reminders, setReminders] = useState([]);
   const [message, setMessage] = useState('');
-  const [reminderHistory, setReminderHistory] = useState([]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validate inputs
-    if (!reminder.invoiceId || !reminder.dueDate) {
-      setMessage('Please enter invoice ID and due date');
+    if (!reminder.invoiceId || !reminder.dueDate || !reminder.clientEmail || !reminder.message) {
+      setMessage('Please fill in all required fields');
       return;
     }
 
-    if (reminder.notificationType === 'email' && !reminder.clientEmail) {
-      setMessage('Please enter client email for email notification');
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(reminder.clientEmail)) {
+      setMessage('Please enter a valid email address');
       return;
     }
 
-    if (reminder.notificationType === 'sms' && !reminder.clientPhone) {
-      setMessage('Please enter client phone number for SMS notification');
+    // Check if reminder already exists for this invoice
+    if (reminders.some(r => r.invoiceId === reminder.invoiceId)) {
+      setMessage('A reminder already exists for this invoice');
       return;
     }
 
     const newReminder = {
       ...reminder,
       id: Date.now(),
-      status: 'sent',
-      sentDate: new Date().toLocaleString()
+      createdAt: new Date().toLocaleString(),
+      status: 'pending',
+      notifications: [] // Track sent notifications
     };
 
-    setReminderHistory([...reminderHistory, newReminder]);
+    setReminders([...reminders, newReminder]);
     
     // Clear form
     setReminder({
       invoiceId: '',
       dueDate: '',
+      clientName: '',
       clientEmail: '',
       clientPhone: '',
-      notificationType: 'email',
+      notificationType: ['email'],
       message: '',
+      priority: 'medium'
     });
     
-    setMessage('Reminder sent successfully!');
+    setMessage('Reminder set successfully!');
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const getDefaultMessage = () => {
-    const daysUntilDue = Math.ceil((new Date(reminder.dueDate) - new Date()) / (1000 * 60 * 60 * 24));
-    if (daysUntilDue < 0) {
-      return `This is a reminder that your invoice ${reminder.invoiceId} is overdue by ${Math.abs(daysUntilDue)} days. Please process the payment as soon as possible.`;
-    } else if (daysUntilDue === 0) {
-      return `This is a reminder that your invoice ${reminder.invoiceId} is due today. Please process the payment to avoid any late fees.`;
+  const handleDelete = (id) => {
+    setReminders(reminders.filter(r => r.id !== id));
+    setMessage('Reminder deleted successfully!');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleStatusChange = (id, newStatus) => {
+    setReminders(reminders.map(r => 
+      r.id === id ? { ...r, status: newStatus } : r
+    ));
+  };
+
+  const handleNotificationTypeChange = (type) => {
+    const currentTypes = reminder.notificationType;
+    if (currentTypes.includes(type)) {
+      setReminder({
+        ...reminder,
+        notificationType: currentTypes.filter(t => t !== type)
+      });
     } else {
-      return `This is a reminder that your invoice ${reminder.invoiceId} is due in ${daysUntilDue} days. Please process the payment before the due date.`;
+      setReminder({
+        ...reminder,
+        notificationType: [...currentTypes, type]
+      });
     }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'red';
+      case 'medium':
+        return 'orange';
+      case 'low':
+        return 'green';
+      default:
+        return 'black';
+    }
+  };
+
+  const sendNotification = (reminderId) => {
+    setReminders(reminders.map(r => {
+      if (r.id === reminderId) {
+        const notification = {
+          type: r.notificationType,
+          timestamp: new Date().toLocaleString(),
+          status: 'sent'
+        };
+        return {
+          ...r,
+          notifications: [...(r.notifications || []), notification],
+          status: 'sent'
+        };
+      }
+      return r;
+    }));
+    setMessage('Notification sent successfully!');
+    setTimeout(() => setMessage(''), 3000);
   };
 
   return (
     <div className="invoice-reminder">
-      <h2>Invoice Due Reminder</h2>
+      <h2>Invoice Reminders</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Invoice ID:</label>
@@ -80,7 +137,6 @@ const InvoiceReminder = () => {
             required
           />
         </div>
-
         <div className="form-group">
           <label>Due Date:</label>
           <input
@@ -90,64 +146,86 @@ const InvoiceReminder = () => {
             required
           />
         </div>
-
+        <div className="form-group">
+          <label>Client Name:</label>
+          <input
+            type="text"
+            placeholder="Enter client name"
+            value={reminder.clientName}
+            onChange={(e) => setReminder({ ...reminder, clientName: e.target.value })}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Client Email:</label>
+          <input
+            type="email"
+            placeholder="Enter client email"
+            value={reminder.clientEmail}
+            onChange={(e) => setReminder({ ...reminder, clientEmail: e.target.value })}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Client Phone:</label>
+          <input
+            type="tel"
+            placeholder="Enter client phone"
+            value={reminder.clientPhone}
+            onChange={(e) => setReminder({ ...reminder, clientPhone: e.target.value })}
+          />
+        </div>
         <div className="form-group">
           <label>Notification Type:</label>
-          <select
-            value={reminder.notificationType}
-            onChange={(e) => setReminder({ ...reminder, notificationType: e.target.value })}
-            required
-          >
-            <option value="email">Email</option>
-            <option value="sms">SMS</option>
-            <option value="in-app">In-App</option>
-          </select>
+          <div className="notification-options">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={reminder.notificationType.includes('email')}
+                onChange={() => handleNotificationTypeChange('email')}
+              />
+              Email
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={reminder.notificationType.includes('sms')}
+                onChange={() => handleNotificationTypeChange('sms')}
+              />
+              SMS
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={reminder.notificationType.includes('in-app')}
+                onChange={() => handleNotificationTypeChange('in-app')}
+              />
+              In-App
+            </label>
+          </div>
         </div>
-
-        {reminder.notificationType === 'email' && (
-          <div className="form-group">
-            <label>Client Email:</label>
-            <input
-              type="email"
-              placeholder="Enter client email"
-              value={reminder.clientEmail}
-              onChange={(e) => setReminder({ ...reminder, clientEmail: e.target.value })}
-              required
-            />
-          </div>
-        )}
-
-        {reminder.notificationType === 'sms' && (
-          <div className="form-group">
-            <label>Client Phone:</label>
-            <input
-              type="tel"
-              placeholder="Enter client phone number"
-              value={reminder.clientPhone}
-              onChange={(e) => setReminder({ ...reminder, clientPhone: e.target.value })}
-              required
-            />
-          </div>
-        )}
-
         <div className="form-group">
           <label>Message:</label>
           <textarea
             placeholder="Enter reminder message"
             value={reminder.message}
             onChange={(e) => setReminder({ ...reminder, message: e.target.value })}
-            rows="4"
+            required
           />
-          <button
-            type="button"
-            className="default-message-button"
-            onClick={() => setReminder({ ...reminder, message: getDefaultMessage() })}
-          >
-            Use Default Message
-          </button>
         </div>
-
-        <button type="submit" className="send-button">Send Reminder</button>
+        <div className="form-group">
+          <label>Priority:</label>
+          <select
+            value={reminder.priority}
+            onChange={(e) => setReminder({ ...reminder, priority: e.target.value })}
+            required
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <button type="submit" className="submit-button">Set Reminder</button>
       </form>
 
       {message && (
@@ -156,18 +234,51 @@ const InvoiceReminder = () => {
         </div>
       )}
 
-      {reminderHistory.length > 0 && (
-        <div className="reminder-history">
-          <h3>Recent Reminders</h3>
-          <div className="history-list">
-            {reminderHistory.map((rem) => (
-              <div key={rem.id} className="history-item">
-                <p><strong>Invoice ID:</strong> {rem.invoiceId}</p>
-                <p><strong>Due Date:</strong> {rem.dueDate}</p>
-                <p><strong>Type:</strong> {rem.notificationType}</p>
-                <p><strong>Contact:</strong> {rem.notificationType === 'email' ? rem.clientEmail : rem.clientPhone}</p>
-                <p><strong>Sent:</strong> {rem.sentDate}</p>
-                <p><strong>Status:</strong> {rem.status}</p>
+      {reminders.length > 0 && (
+        <div className="reminders-list">
+          <h3>Active Reminders</h3>
+          <div className="reminders-grid">
+            {reminders.map((r) => (
+              <div 
+                key={r.id} 
+                className="reminder-item"
+                style={{ borderLeft: `4px solid ${getPriorityColor(r.priority)}` }}
+              >
+                <p><strong>Invoice ID:</strong> {r.invoiceId}</p>
+                <p><strong>Client:</strong> {r.clientName}</p>
+                <p><strong>Contact:</strong> {r.clientEmail}</p>
+                <p><strong>Due Date:</strong> {r.dueDate}</p>
+                <p><strong>Notification Types:</strong> {r.notificationType.join(', ')}</p>
+                <p><strong>Message:</strong> {r.message}</p>
+                <p><strong>Priority:</strong> {r.priority}</p>
+                <p><strong>Created:</strong> {r.createdAt}</p>
+                <p><strong>Status:</strong> {r.status}</p>
+                {r.notifications && r.notifications.length > 0 && (
+                  <div className="notification-history">
+                    <h4>Notification History</h4>
+                    {r.notifications.map((n, index) => (
+                      <p key={index}>
+                        {n.type.join(', ')} - {n.timestamp} - {n.status}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <div className="reminder-actions">
+                  {r.status === 'pending' && (
+                    <button
+                      className="send-button"
+                      onClick={() => sendNotification(r.id)}
+                    >
+                      Send Notification
+                    </button>
+                  )}
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(r.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>

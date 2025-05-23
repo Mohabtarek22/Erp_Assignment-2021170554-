@@ -3,118 +3,106 @@ import 'C:/Users/mohab/OneDrive/Desktop/ERP_ASSIGNMENT/cost-management-system/sr
 
 const TaxCalculation = () => {
   const [taxInput, setTaxInput] = useState({
-    subtotal: '',
-    taxRate: '',
-    region: 'US',
+    subtotal: 0,
+    region: '',
+    taxType: 'standard'
   });
-  const [message, setMessage] = useState('');
-  const [calculationHistory, setCalculationHistory] = useState([]);
 
-  const getRegionTaxRates = (region) => {
-    const rates = {
-      US: {
-        default: 0,
-        states: {
-          CA: 7.25,
-          NY: 8.875,
-          TX: 6.25,
-          FL: 6.00,
-          IL: 6.25
-        }
-      },
-      EU: {
-        default: 20,
-        countries: {
-          DE: 19,
-          FR: 20,
-          IT: 22,
-          ES: 21,
-          UK: 20
-        }
-      },
-      UK: {
-        default: 20,
-        regions: {
-          England: 20,
-          Scotland: 20,
-          Wales: 20,
-          NorthernIreland: 20
-        }
-      }
-    };
-    return rates[region] || rates.US;
+  const [taxResult, setTaxResult] = useState(null);
+  const [message, setMessage] = useState('');
+
+  // Regional tax rules
+  const taxRules = {
+    'US': {
+      standard: 0.07, // 7%
+      reduced: 0.04,  // 4%
+      luxury: 0.12    // 12%
+    },
+    'EU': {
+      standard: 0.20, // 20%
+      reduced: 0.10,  // 10%
+      luxury: 0.25    // 25%
+    },
+    'UK': {
+      standard: 0.20, // 20%
+      reduced: 0.05,  // 5%
+      luxury: 0.25    // 25%
+    },
+    'CA': {
+      standard: 0.13, // 13%
+      reduced: 0.05,  // 5%
+      luxury: 0.15    // 15%
+    }
   };
 
-  const calculateTax = (e) => {
+  const calculateTax = (subtotal, region, taxType) => {
+    if (!region || !taxType || !taxRules[region]) {
+      return null;
+    }
+
+    const rate = taxRules[region][taxType];
+    const taxAmount = subtotal * rate;
+    const total = subtotal + taxAmount;
+
+    return {
+      subtotal,
+      taxRate: rate * 100,
+      taxAmount,
+      total
+    };
+  };
+
+  const handleCalculate = (e) => {
     e.preventDefault();
     
-    // Validate inputs
-    if (!taxInput.subtotal || !taxInput.taxRate) {
+    if (!taxInput.subtotal || !taxInput.region || !taxInput.taxType) {
       setMessage('Please fill in all required fields');
       return;
     }
 
-    if (isNaN(taxInput.subtotal) || taxInput.subtotal <= 0) {
-      setMessage('Please enter a valid subtotal amount');
-      return;
+    const result = calculateTax(
+      parseFloat(taxInput.subtotal),
+      taxInput.region,
+      taxInput.taxType
+    );
+
+    if (result) {
+      setTaxResult(result);
+      setMessage('Tax calculated successfully!');
+    } else {
+      setMessage('Invalid tax calculation parameters');
     }
 
-    if (isNaN(taxInput.taxRate) || taxInput.taxRate < 0 || taxInput.taxRate > 100) {
-      setMessage('Please enter a valid tax rate between 0 and 100');
-      return;
-    }
+    setTimeout(() => setMessage(''), 3000);
+  };
 
-    const subtotal = parseFloat(taxInput.subtotal);
-    const taxRate = parseFloat(taxInput.taxRate);
-    const taxAmount = (subtotal * taxRate) / 100;
-    const total = subtotal + taxAmount;
-
-    const calculation = {
-      id: Date.now(),
-      subtotal,
-      taxRate,
-      taxAmount,
-      total,
-      region: taxInput.region,
-      timestamp: new Date().toLocaleString()
-    };
-
-    setCalculationHistory([...calculationHistory, calculation]);
-    setMessage('Tax calculated successfully!');
+  const handleReset = () => {
+    setTaxInput({
+      subtotal: 0,
+      region: '',
+      taxType: 'standard'
+    });
+    setTaxResult(null);
+    setMessage('Calculation reset');
     setTimeout(() => setMessage(''), 3000);
   };
 
   return (
     <div className="tax-calculation">
-      <h2>Tax Calculation</h2>
-      <form onSubmit={calculateTax}>
+      <h2>Tax Calculator</h2>
+      <form onSubmit={handleCalculate}>
         <div className="form-group">
           <label>Subtotal ($):</label>
           <input
             type="number"
             placeholder="Enter subtotal amount"
             value={taxInput.subtotal}
+            min="0"
+            step="0.01"
             onChange={(e) => setTaxInput({ ...taxInput, subtotal: e.target.value })}
-            min="0"
-            step="0.01"
             required
           />
         </div>
-
-        <div className="form-group">
-          <label>Tax Rate (%):</label>
-          <input
-            type="number"
-            placeholder="Enter tax rate"
-            value={taxInput.taxRate}
-            onChange={(e) => setTaxInput({ ...taxInput, taxRate: e.target.value })}
-            min="0"
-            max="100"
-            step="0.01"
-            required
-          />
-        </div>
-
         <div className="form-group">
           <label>Region:</label>
           <select
@@ -122,13 +110,29 @@ const TaxCalculation = () => {
             onChange={(e) => setTaxInput({ ...taxInput, region: e.target.value })}
             required
           >
+            <option value="">Select Region</option>
             <option value="US">United States</option>
-            <option value="EU">Europe</option>
+            <option value="EU">European Union</option>
             <option value="UK">United Kingdom</option>
+            <option value="CA">Canada</option>
           </select>
         </div>
-
-        <button type="submit" className="calculate-button">Calculate Tax</button>
+        <div className="form-group">
+          <label>Tax Type:</label>
+          <select
+            value={taxInput.taxType}
+            onChange={(e) => setTaxInput({ ...taxInput, taxType: e.target.value })}
+            required
+          >
+            <option value="standard">Standard Rate</option>
+            <option value="reduced">Reduced Rate</option>
+            <option value="luxury">Luxury Rate</option>
+          </select>
+        </div>
+        <div className="button-group">
+          <button type="submit" className="calculate-button">Calculate Tax</button>
+          <button type="button" className="reset-button" onClick={handleReset}>Reset</button>
+        </div>
       </form>
 
       {message && (
@@ -137,23 +141,33 @@ const TaxCalculation = () => {
         </div>
       )}
 
-      {calculationHistory.length > 0 && (
-        <div className="calculation-history">
-          <h3>Recent Calculations</h3>
-          <div className="history-list">
-            {calculationHistory.map((calc) => (
-              <div key={calc.id} className="history-item">
-                <p><strong>Region:</strong> {calc.region}</p>
-                <p><strong>Subtotal:</strong> ${calc.subtotal.toFixed(2)}</p>
-                <p><strong>Tax Rate:</strong> {calc.taxRate}%</p>
-                <p><strong>Tax Amount:</strong> ${calc.taxAmount.toFixed(2)}</p>
-                <p><strong>Total:</strong> ${calc.total.toFixed(2)}</p>
-                <p><strong>Calculated:</strong> {calc.timestamp}</p>
-              </div>
-            ))}
+      {taxResult && (
+        <div className="tax-result">
+          <h3>Tax Calculation Result</h3>
+          <div className="result-details">
+            <p><strong>Subtotal:</strong> ${taxResult.subtotal.toFixed(2)}</p>
+            <p><strong>Tax Rate:</strong> {taxResult.taxRate.toFixed(1)}%</p>
+            <p><strong>Tax Amount:</strong> ${taxResult.taxAmount.toFixed(2)}</p>
+            <p className="total"><strong>Total:</strong> ${taxResult.total.toFixed(2)}</p>
           </div>
         </div>
       )}
+
+      <div className="tax-rules">
+        <h3>Regional Tax Rules</h3>
+        <div className="rules-grid">
+          {Object.entries(taxRules).map(([region, rates]) => (
+            <div key={region} className="region-card">
+              <h4>{region}</h4>
+              <ul>
+                <li>Standard Rate: {(rates.standard * 100).toFixed(1)}%</li>
+                <li>Reduced Rate: {(rates.reduced * 100).toFixed(1)}%</li>
+                <li>Luxury Rate: {(rates.luxury * 100).toFixed(1)}%</li>
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

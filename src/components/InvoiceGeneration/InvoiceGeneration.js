@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import 'C:/Users/mohab/OneDrive/Desktop/ERP_ASSIGNMENT/cost-management-system/src/styles/InvoiceGeneration.css';
 
-const InvoiceGeneration = () => {
+const InvoiceGeneration = ({ onAddInvoice, invoices }) => {
   const [invoice, setInvoice] = useState({
+    id: '',
     clientId: '',
     clientName: '',
     items: [{ name: '', quantity: 1, unitPrice: 0 }],
@@ -10,7 +11,25 @@ const InvoiceGeneration = () => {
     discount: 0,
   });
   const [message, setMessage] = useState('');
-  const [invoiceHistory, setInvoiceHistory] = useState([]);
+
+  // Generate unique invoice number
+  const generateInvoiceNumber = () => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+    
+    // Get all existing invoice numbers
+    const existingNumbers = invoices.map(inv => inv.invoiceId);
+    
+    let sequence = 1;
+    let newInvoiceNumber;
+    
+    do {
+      newInvoiceNumber = `INV-${currentYear}${currentMonth}-${sequence.toString().padStart(4, '0')}`;
+      sequence++;
+    } while (existingNumbers.includes(newInvoiceNumber));
+    
+    return newInvoiceNumber;
+  };
 
   const handleAddItem = () => {
     setInvoice({
@@ -41,6 +60,11 @@ const InvoiceGeneration = () => {
     e.preventDefault();
     
     // Validate inputs
+    if (!invoice.id) {
+      setMessage('Please enter an invoice ID');
+      return;
+    }
+
     if (!invoice.clientId || !invoice.clientName) {
       setMessage('Please enter client details');
       return;
@@ -51,19 +75,28 @@ const InvoiceGeneration = () => {
       return;
     }
 
-    const invoiceNumber = `INV-${Date.now()}`;
+    // Check if ID already exists
+    if (invoices.some(inv => inv.id === invoice.id)) {
+      setMessage('This Invoice ID already exists. Please use a different ID.');
+      return;
+    }
+
+    // Generate unique invoice number
+    const invoiceId = generateInvoiceNumber();
+
     const newInvoice = {
       ...invoice,
-      invoiceNumber,
+      invoiceId,
       subtotal: calculateSubtotal(),
       total: calculateTotal(),
       date: new Date().toLocaleString()
     };
 
-    setInvoiceHistory([...invoiceHistory, newInvoice]);
+    onAddInvoice(newInvoice);
     
     // Clear form
     setInvoice({
+      id: '',
       clientId: '',
       clientName: '',
       items: [{ name: '', quantity: 1, unitPrice: 0 }],
@@ -71,7 +104,7 @@ const InvoiceGeneration = () => {
       discount: 0,
     });
     
-    setMessage('Invoice generated successfully!');
+    setMessage(`Invoice ${invoiceId} generated successfully!`);
     setTimeout(() => setMessage(''), 3000);
   };
 
@@ -80,6 +113,16 @@ const InvoiceGeneration = () => {
       <h2>Generate Invoice</h2>
       <form onSubmit={handleSubmit}>
         <div className="client-details">
+          <div className="form-group">
+            <label>Invoice ID:</label>
+            <input
+              type="text"
+              placeholder="Enter invoice ID"
+              value={invoice.id}
+              onChange={(e) => setInvoice({ ...invoice, id: e.target.value })}
+              required
+            />
+          </div>
           <div className="form-group">
             <label>Client ID:</label>
             <input
@@ -208,13 +251,14 @@ const InvoiceGeneration = () => {
         </div>
       )}
 
-      {invoiceHistory.length > 0 && (
+      {invoices.length > 0 && (
         <div className="invoice-history">
           <h3>Recent Invoices</h3>
           <div className="history-list">
-            {invoiceHistory.map((inv) => (
-              <div key={inv.invoiceNumber} className="history-item">
-                <p><strong>Invoice #:</strong> {inv.invoiceNumber}</p>
+            {invoices.map((inv) => (
+              <div key={inv.invoiceId} className="history-item">
+                <p><strong>Invoice ID:</strong> {inv.id}</p>
+                <p><strong>Invoice Number:</strong> {inv.invoiceId}</p>
                 <p><strong>Client:</strong> {inv.clientName}</p>
                 <p><strong>Date:</strong> {inv.date}</p>
                 <p><strong>Total:</strong> ${inv.total.toFixed(2)}</p>
