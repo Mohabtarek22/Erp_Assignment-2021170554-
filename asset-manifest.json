@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Erp_Assignment-2021170554-/static/css/main.80bcf156.css",
+    "main.js": "/Erp_Assignment-2021170554-/static/js/main.0097aa06.js",
+    "static/js/453.4884e185.chunk.js": "/Erp_Assignment-2021170554-/static/js/453.4884e185.chunk.js",
+    "index.html": "/Erp_Assignment-2021170554-/index.html",
+    "main.80bcf156.css.map": "/Erp_Assignment-2021170554-/static/css/main.80bcf156.css.map",
+    "main.0097aa06.js.map": "/Erp_Assignment-2021170554-/static/js/main.0097aa06.js.map",
+    "453.4884e185.chunk.js.map": "/Erp_Assignment-2021170554-/static/js/453.4884e185.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.80bcf156.css",
+    "static/js/main.0097aa06.js"
+  ]
+}
